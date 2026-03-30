@@ -26,15 +26,27 @@ export const parseDashboardCSV = async (url: string) => {
   }
   
   const metadataLines = lines.slice(0, headerIndex);
-  const dataBlock = lines.slice(headerIndex).join('\n');
+  let headerLine = lines[headerIndex];
+  
+  // Improve header handling: if we have "Indicator" followed by "Classificação", 
+  // rename "Classificação" to "Indicator - Classificação"
+  const headers = headerLine.split(';').map(h => h.trim().replace(/"/g, '').replace(/\t/g, ''));
+  const newHeaders = [...headers];
+  for (let i = 0; i < newHeaders.length; i++) {
+    if (newHeaders[i] === 'Classificação' && i > 0) {
+      newHeaders[i] = `${newHeaders[i-1]} - Classificação`;
+    }
+  }
+  
+  const dataBlock = [newHeaders.join(';'), ...lines.slice(headerIndex + 1)].join('\n');
   
   const parsed = Papa.parse(dataBlock, {
     header: true,
     skipEmptyLines: true,
     delimiter: ";",
-    transformHeader: (h: string) => h.trim().replace(/"/g, ''),
+    transformHeader: (h: string) => h.trim(),
     transform: (v: string) => {
-      const val = v.trim().replace(/"/g, '').replace(/\t/g, '');
+      const val = String(v || '').trim().replace(/"/g, '').replace(/\t/g, '');
       // If it looks like a number with a comma, convert to a valid number
       if (/^-?\d+,\d+$/.test(val)) {
         return parseFloat(val.replace(',', '.'));

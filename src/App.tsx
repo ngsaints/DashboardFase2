@@ -45,26 +45,49 @@ const App: React.FC = () => {
   }, [currentCSV]);
 
   // Extract unique filter options from data using useMemo
+  // These are now dependent on previous filters
   const filterOptions = useMemo<FilterOptions>(() => {
-    const getUniqueOptions = (key: keyof CSVRecord) => {
-      if (!dashboardData?.data) return [];
+    const getUniqueOptions = (key: keyof CSVRecord, currentFilteredData: CSVRecord[]) => {
       const options = new Set<string>();
-      dashboardData.data.forEach((row: CSVRecord) => {
+      currentFilteredData.forEach((row: CSVRecord) => {
         const val = row[key];
-        if (val !== undefined && String(val).trim() !== '') {
+        if (val !== undefined && String(val).trim() !== '' && String(val).trim() !== 'N/A' && String(val).trim() !== '-') {
           options.add(String(val).trim());
         }
       });
       return Array.from(options).sort();
     };
 
+    const data = dashboardData?.data || [];
+    
+    // For municipios, always show all available in the dataset
+    const municipios = getUniqueOptions('Nome Município', data);
+    
+    // For siglas, filter by selected municipio
+    const dataByMunicipio = data.filter(row => 
+      filters.municipio === 'Todos' || String(row['Nome Município'] || '').trim() === filters.municipio
+    );
+    const siglas = getUniqueOptions('SIGLA DA EQUIPE', dataByMunicipio);
+    
+    // For estabelecimentos, filter by municipio and sigla
+    const dataBySigla = dataByMunicipio.filter(row => 
+      filters.sigla === 'Todos' || String(row['SIGLA DA EQUIPE'] || '').trim() === filters.sigla
+    );
+    const estabelecimentos = getUniqueOptions('ESTABELECIMENTO', dataBySigla);
+    
+    // For equipes, filter by municipio, sigla and estabelecimento
+    const dataByEstabelecimento = dataBySigla.filter(row => 
+      filters.estabelecimento === 'Todos' || String(row['ESTABELECIMENTO'] || '').trim() === filters.estabelecimento
+    );
+    const equipes = getUniqueOptions('NOME DA EQUIPE', dataByEstabelecimento);
+
     return {
-      municipios: getUniqueOptions('Nome Município'),
-      siglas: getUniqueOptions('SIGLA DA EQUIPE'),
-      estabelecimentos: getUniqueOptions('ESTABELECIMENTO'),
-      equipes: getUniqueOptions('NOME DA EQUIPE')
+      municipios,
+      siglas,
+      estabelecimentos,
+      equipes
     };
-  }, [dashboardData]);
+  }, [dashboardData, filters.municipio, filters.sigla, filters.estabelecimento]);
 
   const handleClearFilters = () => {
     setFilters({

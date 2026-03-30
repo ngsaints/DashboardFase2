@@ -99,19 +99,46 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
   });
 
   const values = chartColumns.map(c => {
-    const validRows = data.filter(row => row[c] !== 'N/A');
+    const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
+    if (validRows.length === 0) return NaN;
     const sum = validRows.reduce((acc, row) => acc + ensureNumber(row[c]), 0);
     return sum / (validRows.length || 1);
   });
   
-  // Dynamic colors for bars based on their performance level
-  // Note: CVAT scale is 0-10, Qualidade is 0-100
-  const barColors = values.map(v => {
-    const percent = isCVAT ? v * 10 : v;
-    if (percent >= 80) return '#22c55e'; // ÓTIMO
-    if (percent >= 60) return '#3b82f6'; // BOM
-    if (percent >= 40) return '#f59e0b'; // SUFICIENTE
-    return '#ef4444'; // REGULAR
+  // Prepare status for each indicator
+  const statuses = chartColumns.map((c, idx) => {
+    const classificationCol = `${String(c)} - Classificação`;
+    const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
+    
+    if (validRows.length === 0) return 'N/A';
+    
+    // If we have one or a few rows, try to get the actual classification from the CSV
+    if (data.length <= 5) {
+      const firstValidRow = data.find(row => row[classificationCol] && row[classificationCol] !== 'N/A' && row[classificationCol] !== '-');
+      if (firstValidRow) {
+        return String(firstValidRow[classificationCol as keyof CSVRecord]).toUpperCase().trim();
+      }
+    }
+    
+    // Fallback to average-based calculation
+    const avg = values[idx];
+    if (isNaN(avg)) return 'N/A';
+    
+    const percent = isCVAT ? avg * 10 : avg;
+    if (percent >= 80) return 'ÓTIMO';
+    if (percent >= 60) return 'BOM';
+    if (percent >= 40) return 'SUFICIENTE';
+    return 'REGULAR';
+  });
+
+  const barColors = statuses.map(s => {
+    switch (s) {
+      case 'ÓTIMO': return '#22c55e';
+      case 'BOM': return '#3b82f6';
+      case 'SUFICIENTE': return '#f59e0b';
+      case 'REGULAR': return '#ef4444';
+      default: return '#94a3b8';
+    }
   });
 
   // Count classifications for donut
@@ -179,16 +206,14 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
               <tbody>
                 {chartColumns.map((col, idx) => {
                   const avg = values[idx];
-                  const percent = isCVAT ? avg * 10 : avg;
-                  let status = 'REGULAR';
-                  if (percent >= 80) status = 'ÓTIMO';
-                  else if (percent >= 60) status = 'BOM';
-                  else if (percent >= 40) status = 'SUFICIENTE';
+                  const status = statuses[idx];
 
                   return (
                     <tr key={String(col)} style={{ borderBottom: '1px solid var(--gray-100)' }}>
                       <td style={{ padding: '12px', fontWeight: 500 }}>{String(col)}</td>
-                      <td style={{ padding: '12px', textAlign: 'center', fontWeight: 700 }}>{avg.toFixed(2)}</td>
+                      <td style={{ padding: '12px', textAlign: 'center', fontWeight: 700 }}>
+                        {isNaN(avg) ? '-' : avg.toFixed(2)}
+                      </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
                         <span style={{ 
                           padding: '4px 12px', 
