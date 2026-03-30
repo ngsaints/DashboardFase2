@@ -1,0 +1,30 @@
+﻿Ministério da Saúde MS
+Secretaria de Atenção Primária à Saúde SAPS
+Sistema de Informação para a Atenção Primária à Saúde – SIAPS
+Dado gerado em: 28 de março de 2026 - 19:02h
+Módulo Transferencia de arquivo - Componente CVAT
+Dado Preliminar
+
+Dados Sócio Demográficos:
+UF: BA
+Município: 291210 / IBICARAÍ
+
+Filtro:
+Competência selecionada: JAN/26
+Indicador selecionado: Visão Geral - Componente Vínculo e Acompanhamento Territorial
+Visualizacao: Monitoramento
+
+Competência/Ano;UF;IBGE Município;Nome Município;Condição de Equipe;CNES;ESTABELECIMENTO;TIPO DO ESTABELECIMENTO;INE;NOME DA EQUIPE;SIGLA DA EQUIPE;PARÂMETRO POPULACIONAL;Total de pessoas com cadastro (soma de MICI e MICDT);Resultado da Dimensão Cadastro;Classificação da dimensão Cadastro;Total de pessoas Acompanhadas;Resultado Acompanhamento;Classificação dimensão Acompanhamento;Nº de pessoas vinculadas a Equipe;Resultado do Componente Vínculo e Acompanhamento Territorial (CVAT);Classificação do Componente Vínculo e Acompanhamento Territorial (CVAT)
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"3917746	";"UNIDADE SAUDE DA FAMILIA CLEIDSON DIAS CARDOSO	";"02	";"0000193151	";"ESF CLEIDSON DIAS CARDOSO	";"eSF	";"2500	";"42	";"3,00	";"ÓTIMO	";"1904	";"7,00	";"ÓTIMO	";"1904	";"10,00	";"ÓTIMO	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"2412624	";"UNIDADE SAUDE DA FAMILIA JOSE VIEIRA DE MENEZES	";"02	";"0000193062	";"JOSE VIEIRA DE MENEZES	";"eSF	";"2500	";"11	";"2,25	";"BOM	";"1331	";"5,25	";"BOM	";"1331	";"7,50	";"BOM	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"2412780	";"UNIDADE SAUDE DA FAMILIA OLYNTHO MATOS	";"02	";"0000193119	";"OLYNTHO MATOS	";"eSF	";"2500	";"15	";"3,00	";"ÓTIMO	";"1917	";"7,00	";"ÓTIMO	";"1917	";"10,00	";"ÓTIMO	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"2412764	";"UNIDADE SAUDE DA FAMILIA LAURO FIGUEIREDO PIRES	";"02	";"0000193100	";"LAURO FIGUEIREDO PIRES	";"eSF	";"2500	";"27	";"3,00	";"ÓTIMO	";"1744	";"7,00	";"ÓTIMO	";"1744	";"10,00	";"ÓTIMO	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"2412756	";"UNIDADE SAUDE DA FAMILIA DR HENRIQUE PIMENTEL SAMPAIO	";"02	";"0000193097	";"DR. HENRIQUE PIMENTEL SAMPAIO	";"eSF	";"2500	";"22	";"3,00	";"ÓTIMO	";"2002	";"7,00	";"ÓTIMO	";"2002	";"10,00	";"ÓTIMO	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"3128342	";"UNIDADE SAUDE DA FAMILIA OSEAS PEIXOTO	";"02	";"0000193143	";"OSEAS PEIXOTO	";"eSF	";"2500	";"57	";"3,00	";"ÓTIMO	";"1588	";"5,25	";"BOM	";"1588	";"8,25	";"BOM	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"2412721	";"UNIDADE SAUDE DA FAMILIA NERICIA SALES SOUZA MENEZES	";"02	";"0000193070	";"NERICIA SALES	";"eSF	";"2500	";"15	";"1,50	";"SUFICIENTE	";"1019	";"3,50	";"SUFICIENTE	";"1019	";"5,00	";"SUFICIENTE	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"5889995	";"UNIDADE SAUDE DA FAMILIA CORINA BATISTA	";"02	";"0000193186	";"CORINA BATISTA	";"eSF	";"2500	";"29	";"2,25	";"BOM	";"1297	";"5,40	";"BOM	";"1297	";"7,65	";"BOM	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"4025938	";"UNIDADE SAUDE DA FAMILIA SILVINO PIRES	";"02	";"0000193178	";"SILVINO PIRES	";"eSF	";"2500	";"15	";"3,00	";"ÓTIMO	";"1995	";"7,00	";"ÓTIMO	";"1995	";"10,00	";"ÓTIMO	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"2412748	";"UNIDADE SAUDE DA FAMILIA ISRAEL MENDONCA	";"02	";"0000193089	";"ISRAEL MENDONCA	";"eSF	";"2500	";"33	";"3,00	";"ÓTIMO	";"2132	";"7,00	";"ÓTIMO	";"2132	";"10,00	";"ÓTIMO	"
+"JAN/26	";"BA	";"291210	";"IBICARAÍ	";" - 	";"2412799	";"UNIDADE SAUDE DA FAMILIA DR ANTONIO VIEIRA DE BRITO	";"02	";"0000193127	";"DR. FERREIRINHA	";"eSF	";"2500	";"21	";"3,00	";"ÓTIMO	";"1535	";"5,25	";"BOM	";"1535	";"8,25	";"BOM	"
+
+Fonte: Sistema de Informação para a Atenção Primária à Saúde - SIAPS
