@@ -312,31 +312,38 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
               <TrendingUp size={18} /> Desempenho por Indicador
             </h2>
           </div>
-          <div className="chart-container">
+          <div className="chart-container" style={{ height: '600px' }}>
             {Plot ? (
               <Plot
                 data={[
                   {
-                    x: categories,
-                    y: values,
+                    x: values,
+                    y: categories,
                     type: 'bar',
+                    orientation: 'h',
                     marker: {
                       color: barColors,
                       line: { width: 0 }
                     },
-                    width: 0.6
+                    width: 0.8
                   }
                 ]}
                 layout={{
                   autosize: true,
-                  margin: { t: 30, b: 180, l: 50, r: 20 },
+                  margin: { t: 10, b: 40, l: 250, r: 30 },
                   xaxis: { 
-                    showgrid: false, 
-                    tickangle: -45, 
-                    font: { size: 9 },
-                    automargin: true
+                    range: [0, isCVAT ? 10 : 100], 
+                    gridcolor: '#f0f0f0',
+                    showgrid: true,
+                    zeroline: false,
+                    tickfont: { size: 11 }
                   },
-                  yaxis: { range: [0, isCVAT ? 10 : 100], gridcolor: '#f0f0f0' },
+                  yaxis: { 
+                    showgrid: false,
+                    automargin: true,
+                    font: { size: 11 },
+                    autorange: 'reversed'
+                  },
                   paper_bgcolor: 'rgba(0,0,0,0)',
                   plot_bgcolor: 'rgba(0,0,0,0)',
                   font: { family: 'Inter, sans-serif' }
