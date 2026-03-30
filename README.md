@@ -1,73 +1,51 @@
-# React + TypeScript + Vite
+# Dashboard Fase 2
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este projeto é um painel de análise de dados (Dashboard) desenvolvido com React, TypeScript e Vite. Ele permite a visualização e análise de indicadores de qualidade e acompanhamento territorial através de gráficos interativos.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologias Utilizadas
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19**
+- **TypeScript**
+- **Vite**
+- **Lucide React** (Ícones)
+- **Plotly.js** (Gráficos interativos)
+- **PapaParse** (Processamento de CSV)
 
-## React Compiler
+## 📁 Estrutura do Projeto
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `src/components`: Componentes da interface do usuário (Analytics, Sidebar, Header, etc.).
+- `src/types`: Definições de tipos TypeScript.
+- `src/utils`: Funções utilitárias, como o parser de CSV.
+- `public/`: Arquivos estáticos e bases de dados CSV.
 
-## Expanding the ESLint configuration
+## 🛠️ Como Executar o Projeto
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1.  **Clone o repositório:**
+    ```bash
+    git clone https://github.com/ngsaints/DashboardFase2.git
+    ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+3.  **Inicie o servidor de desenvolvimento:**
+    ```bash
+    npm run dev
+    ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+4.  **Acesse no navegador:**
+    O projeto estará disponível em `http://localhost:5173`.
+
+## 📦 Build para Produção
+
+Para gerar a versão otimizada do projeto:
+```bash
+npm run build
 ```
+Os arquivos finais estarás na pasta `dist/`.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📄 Licença
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Este projeto é privado.
