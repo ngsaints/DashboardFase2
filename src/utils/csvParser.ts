@@ -48,10 +48,12 @@ export const parseDashboardCSV = async (url: string) => {
   });
 
   const getMetadataValue = (lines: string[], searchStr: string) => {
-    const line = lines.find(l => l.includes(searchStr));
-    if (!line) return 'Não informado';
-    return line.split(':')[1]?.trim() || line.trim();
-  };
+     const line = lines.find(l => l.includes(searchStr));
+     if (!line) return 'Não informado';
+     const colonIndex = line.indexOf(':');
+     if (colonIndex === -1) return line.trim();
+     return line.substring(colonIndex + 1).trim();
+   };
 
   const getTitle = (lines: string[]) => {
     // Try line 5 (index 4) which usually has the title
