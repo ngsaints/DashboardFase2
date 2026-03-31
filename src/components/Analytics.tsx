@@ -87,51 +87,56 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
     }
   };
 
-  // Prepare Bar Chart Data
-  const categories = chartColumns.map(c => {
+  // Prepare data for the chart by filtering out indicators with no values
+  const chartData = chartColumns.map((c, idx) => {
+    const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
+    if (validRows.length === 0) return null;
+    
+    const sum = validRows.reduce((acc, row) => acc + ensureNumber(row[c]), 0);
+    const avg = sum / (validRows.length || 1);
+    
+    // Get status for color/label
+    const classificationCol = `${String(c)} - Classificação`;
+    let status = 'REGULAR';
+    
+    if (data.length <= 5) {
+      const firstValidRow = data.find(row => row[classificationCol] && row[classificationCol] !== 'N/A' && row[classificationCol] !== '-');
+      if (firstValidRow) {
+        status = String(firstValidRow[classificationCol as keyof CSVRecord]).toUpperCase().trim();
+      } else {
+        const percent = isCVAT ? avg * 10 : avg;
+        if (percent >= 80) status = 'ÓTIMO';
+        else if (percent >= 60) status = 'BOM';
+        else if (percent >= 40) status = 'SUFICIENTE';
+      }
+    } else {
+      const percent = isCVAT ? avg * 10 : avg;
+      if (percent >= 80) status = 'ÓTIMO';
+      else if (percent >= 60) status = 'BOM';
+      else if (percent >= 40) status = 'SUFICIENTE';
+    }
+
     const colName = String(c);
     let label = colName;
     if (isQualidade && colName.includes('-')) {
       label = colName.split('-')[1]?.trim() || colName;
     }
-    // Better truncation logic: don't cut too short
-    return label.length > 35 ? label.substring(0, 32) + '...' : label;
-  });
+    const truncatedLabel = label.length > 35 ? label.substring(0, 32) + '...' : label;
 
-  const values = chartColumns.map(c => {
-    const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
-    if (validRows.length === 0) return NaN;
-    const sum = validRows.reduce((acc, row) => acc + ensureNumber(row[c]), 0);
-    return sum / (validRows.length || 1);
-  });
+    return {
+      column: c,
+      value: avg,
+      status: status,
+      label: truncatedLabel,
+      fullLabel: colName
+    };
+  }).filter((item): item is NonNullable<typeof item> => item !== null);
+
+  const chartCategories = chartData.map(d => d.label);
+  const chartValues = chartData.map(d => d.value);
+  const chartStatuses = chartData.map(d => d.status);
   
-  // Prepare status for each indicator
-  const statuses = chartColumns.map((c, idx) => {
-    const classificationCol = `${String(c)} - Classificação`;
-    const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
-    
-    if (validRows.length === 0) return 'N/A';
-    
-    // If we have one or a few rows, try to get the actual classification from the CSV
-    if (data.length <= 5) {
-      const firstValidRow = data.find(row => row[classificationCol] && row[classificationCol] !== 'N/A' && row[classificationCol] !== '-');
-      if (firstValidRow) {
-        return String(firstValidRow[classificationCol as keyof CSVRecord]).toUpperCase().trim();
-      }
-    }
-    
-    // Fallback to average-based calculation
-    const avg = values[idx];
-    if (isNaN(avg)) return 'N/A';
-    
-    const percent = isCVAT ? avg * 10 : avg;
-    if (percent >= 80) return 'ÓTIMO';
-    if (percent >= 60) return 'BOM';
-    if (percent >= 40) return 'SUFICIENTE';
-    return 'REGULAR';
-  });
-
-  const barColors = statuses.map(s => {
+  const barColors = chartStatuses.map(s => {
     switch (s) {
       case 'ÓTIMO': return '#22c55e';
       case 'BOM': return '#3b82f6';
@@ -139,6 +144,33 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
       case 'REGULAR': return '#ef4444';
       default: return '#94a3b8';
     }
+  });
+
+  // Keep original values and statuses for the detail table
+  const tableValues = chartColumns.map(c => {
+    const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
+    if (validRows.length === 0) return NaN;
+    const sum = validRows.reduce((acc, row) => acc + ensureNumber(row[c]), 0);
+    return sum / (validRows.length || 1);
+  });
+
+  const tableStatuses = chartColumns.map((c, idx) => {
+    const classificationCol = `${String(c)} - Classificação`;
+    const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
+    if (validRows.length === 0) return 'N/A';
+    
+    if (data.length <= 5) {
+      const firstValidRow = data.find(row => row[classificationCol] && row[classificationCol] !== 'N/A' && row[classificationCol] !== '-');
+      if (firstValidRow) return String(firstValidRow[classificationCol as keyof CSVRecord]).toUpperCase().trim();
+    }
+    
+    const avg = tableValues[idx];
+    if (isNaN(avg)) return 'N/A';
+    const percent = isCVAT ? avg * 10 : avg;
+    if (percent >= 80) return 'ÓTIMO';
+    if (percent >= 60) return 'BOM';
+    if (percent >= 40) return 'SUFICIENTE';
+    return 'REGULAR';
   });
 
   // Count classifications for donut
@@ -169,7 +201,8 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
     avgScore = validRows.reduce((acc, r) => acc + ensureNumber(r[cvatCol as keyof CSVRecord]), 0) / (validRows.length || 1);
   } else {
     // For Qualidade, average of all indicator averages
-    avgScore = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+    const validTableValues = tableValues.filter(v => !isNaN(v));
+    avgScore = validTableValues.length > 0 ? validTableValues.reduce((a, b) => a + b, 0) / validTableValues.length : 0;
   }
 
   const totalAlertas = data.reduce((acc, row) => {
@@ -205,8 +238,8 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
               </thead>
               <tbody>
                 {chartColumns.map((col, idx) => {
-                  const avg = values[idx];
-                  const status = statuses[idx];
+                  const avg = tableValues[idx];
+                  const status = tableStatuses[idx];
 
                   return (
                     <tr key={String(col)} style={{ borderBottom: '1px solid var(--gray-100)' }}>
@@ -342,10 +375,17 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
               <Plot
                 data={[
                   {
-                    x: values,
-                    y: categories,
+                    x: chartValues,
+                    y: chartCategories,
                     type: 'bar',
                     orientation: 'h',
+                    text: chartValues.map(v => isNaN(v) ? '' : (isCVAT ? v.toFixed(2) : v.toFixed(1) + '%')),
+                    textposition: 'auto',
+                    insidetextanchor: 'end',
+                    textfont: {
+                      size: 11,
+                      color: 'white'
+                    },
                     marker: {
                       color: barColors,
                       line: { width: 0 }
