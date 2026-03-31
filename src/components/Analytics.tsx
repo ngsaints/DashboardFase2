@@ -56,12 +56,12 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
 
   // Extracting key values from data for charts
   let chartColumns: (keyof CSVRecord)[] = [];
+  // Excludes technical columns like "CNES", "INE", "UF", etc.
+  // We only keep indicators up to M2 per client request, filtering out M3, CR, etc.
+  const allowedIndicatorRegex = /^([CB]\d+|M1|M2)\s-/;
   if (isQualidade) {
-    // Better regex to match indicators like "C1 - ...", "B2 - ...", "M1 - ...", "CR1 - ...", "P1 - ..."
-    // Excludes technical columns like "CNES", "INE", "UF", etc.
-    const indicatorRegex = /^[CBMP](R?\d+)\s-/;
     chartColumns = Object.keys(data[0]).filter(k => 
-      indicatorRegex.test(k) && !k.includes('Classificação')
+      allowedIndicatorRegex.test(k) && !k.includes('Classificação')
     ) as (keyof CSVRecord)[];
   } else if (isCVAT) {
     chartColumns = [
@@ -90,30 +90,33 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
   // Prepare data for the chart by filtering out indicators with no values
   const chartData = chartColumns.map((c) => {
     const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
-    if (validRows.length === 0) return null;
     
     const sum = validRows.reduce((acc, row) => acc + ensureNumber(row[c]), 0);
-    const avg = sum / (validRows.length || 1);
+    const avg = validRows.length > 0 ? sum / validRows.length : 0;
     
     // Get status for color/label
     const classificationCol = `${String(c)} - Classificação`;
     let status = 'REGULAR';
     
-    if (data.length <= 5) {
-      const firstValidRow = data.find(row => row[classificationCol] && row[classificationCol] !== 'N/A' && row[classificationCol] !== '-');
-      if (firstValidRow) {
-        status = String(firstValidRow[classificationCol as keyof CSVRecord]).toUpperCase().trim();
+    if (validRows.length > 0) {
+      const classifications = validRows.map(r => String(r[classificationCol] || '').toUpperCase().trim()).filter(val => val && val !== 'N/A' && val !== '-');
+      if (classifications.length > 0) {
+        let best = 'REGULAR';
+        let maxC = 0;
+        const counts: Record<string, number> = {};
+        for (const cls of classifications) {
+          counts[cls] = (counts[cls] || 0) + 1;
+          if (counts[cls] > maxC) { maxC = counts[cls]; best = cls; }
+        }
+        status = best;
       } else {
-        const percent = isCVAT ? avg * 10 : avg;
-        if (percent >= 80) status = 'ÓTIMO';
-        else if (percent >= 60) status = 'BOM';
-        else if (percent >= 40) status = 'SUFICIENTE';
+         const percent = isCVAT ? avg * 10 : avg;
+         if (percent >= 80) status = 'ÓTIMO';
+         else if (percent >= 60) status = 'BOM';
+         else if (percent >= 40) status = 'SUFICIENTE';
       }
     } else {
-      const percent = isCVAT ? avg * 10 : avg;
-      if (percent >= 80) status = 'ÓTIMO';
-      else if (percent >= 60) status = 'BOM';
-      else if (percent >= 40) status = 'SUFICIENTE';
+       status = 'N/A';
     }
 
     const colName = String(c);
@@ -159,9 +162,16 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
     const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
     if (validRows.length === 0) return 'N/A';
     
-    if (data.length <= 5) {
-      const firstValidRow = data.find(row => row[classificationCol] && row[classificationCol] !== 'N/A' && row[classificationCol] !== '-');
-      if (firstValidRow) return String(firstValidRow[classificationCol as keyof CSVRecord]).toUpperCase().trim();
+    const classifications = validRows.map(r => String(r[classificationCol] || '').toUpperCase().trim()).filter(val => val && val !== 'N/A' && val !== '-');
+    if (classifications.length > 0) {
+      let best = 'REGULAR';
+      let maxC = 0;
+      const counts: Record<string, number> = {};
+      for (const cls of classifications) {
+        counts[cls] = (counts[cls] || 0) + 1;
+        if (counts[cls] > maxC) { maxC = counts[cls]; best = cls; }
+      }
+      return best;
     }
     
     const avg = tableValues[idx];
@@ -198,11 +208,21 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
   if (isCVAT) {
     const cvatCol = 'Resultado do Componente Vínculo e Acompanhamento Territorial (CVAT)';
     const validRows = data.filter(r => r[cvatCol as keyof CSVRecord] && r[cvatCol as keyof CSVRecord] !== 'N/A');
-    avgScore = validRows.reduce((acc, r) => acc + ensureNumber(r[cvatCol as keyof CSVRecord]), 0) / (validRows.length || 1);
+    avgScore = validRows.length > 0 ? validRows.reduce((acc, r) => acc + ensureNumber(r[cvatCol as keyof CSVRecord]), 0) / validRows.length : 0;
   } else {
-    // For Qualidade, average of all indicator averages
-    const validTableValues = tableValues.filter(v => !isNaN(v));
-    avgScore = validTableValues.length > 0 ? validTableValues.reduce((a, b) => a + b, 0) / validTableValues.length : 0;
+    // For Qualidade, media consolidada dos indicadores pertinentes a categoria
+    let totalSum = 0;
+    let totalCount = 0;
+    data.forEach(row => {
+      chartColumns.forEach(c => {
+        const val = row[c];
+        if (val !== undefined && val !== 'N/A' && String(val).trim() !== '-' && String(val).trim() !== '') {
+          totalSum += ensureNumber(val);
+          totalCount++;
+        }
+      });
+    });
+    avgScore = totalCount > 0 ? totalSum / totalCount : 0;
   }
 
   const totalAlertas = data.reduce((acc, row) => {
@@ -232,7 +252,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--gray-200)', textAlign: 'left' }}>
                   <th style={{ padding: '12px', color: 'var(--gray-600)' }}>Indicador</th>
-                  <th style={{ padding: '12px', color: 'var(--gray-600)', textAlign: 'center' }}>Média Score</th>
+                  <th style={{ padding: '12px', color: 'var(--gray-600)', textAlign: 'center' }}>Percentual do Indicador</th>
                   <th style={{ padding: '12px', color: 'var(--gray-600)', textAlign: 'center' }}>Status Geral</th>
                 </tr>
               </thead>
@@ -306,7 +326,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
                 <tr style={{ borderBottom: '2px solid var(--gray-200)', textAlign: 'left' }}>
                   <th style={{ padding: '12px', color: 'var(--gray-600)' }}>Estabelecimento</th>
                   <th style={{ padding: '12px', color: 'var(--gray-600)', textAlign: 'center' }}>Equipes</th>
-                  <th style={{ padding: '12px', color: 'var(--gray-600)', textAlign: 'center' }}>Score Médio</th>
+                  <th style={{ padding: '12px', color: 'var(--gray-600)', textAlign: 'center' }}>Percentual Médio</th>
                 </tr>
               </thead>
               <tbody>
@@ -321,6 +341,9 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
                 ))}
               </tbody>
             </table>
+            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'var(--gray-50)', borderRadius: '6px', fontSize: '13px', color: 'var(--gray-600)' }}>
+              <strong>Nota sobre o Percentual Médio:</strong> Este cálculo considera apenas os indicadores que são efetivamente aplicáveis e preenchidos para a equipe (ex: em uma Equipe de Saúde da Família, a média só considera os 7 indicadores correspondentes). Indicadores com valor "N/A" ou "-", além daqueles irrelevantes ao município, são removidos automaticamente da equação para que cada estabelecimento tenha uma nota justa baseada em seus serviços.
+            </div>
           </div>
         </div>
       </div>
@@ -350,7 +373,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
           </h2>
           <div className="metrics-grid" style={{ marginBottom: '32px' }}>
             <MetricCard label="COBERTURA" value={`${positivePercent}%`} icon={<Target size={16}/>} subtitle="Ótimo/Bom" color="#22c55e" />
-            <MetricCard label="MÉDIA GERAL" value={avgScore.toFixed(2)} icon={<CheckCircle size={16} />} subtitle="Score" color="#3b82f6" />
+            <MetricCard label="MÉDIA GERAL" value={avgScore.toFixed(2)} icon={<CheckCircle size={16} />} subtitle="Percentual" color="#3b82f6" />
             <MetricCard label="ALERTAS" value={totalAlertas} icon={<AlertTriangle size={16} />} subtitle="Críticos" color="#ef4444" />
           </div>
           <p style={{ color: 'var(--gray-500)', fontSize: '14px' }}>
@@ -379,12 +402,12 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
                     y: chartCategories,
                     type: 'bar',
                     orientation: 'h',
-                    text: chartValues.map(v => isNaN(v) ? '' : (isCVAT ? v.toFixed(2) : v.toFixed(1) + '%')),
-                    textposition: 'auto',
+                    text: chartValues.map(v => isNaN(v) ? '0' : (isCVAT ? v.toFixed(2) : v.toFixed(1) + '%')),
+                    textposition: 'outside',
                     insidetextanchor: 'end',
                     textfont: {
                       size: 11,
-                      color: 'white'
+                      color: 'var(--gray-900)'
                     },
                     marker: {
                       color: barColors,
@@ -426,7 +449,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
         <div className="metrics-grid">
           <MetricCard label="EQUIPES" value={totalEquipes} icon={<Users size={16}/>} subtitle="INEs" />
-          <MetricCard label="MÉDIA NOTA" value={avgScore.toFixed(2)} icon={<CheckCircle size={16} />} subtitle="Consolidada" color="#22c55e" />
+          <MetricCard label="PERCENTUAL MÉDIO" value={avgScore.toFixed(2)} icon={<CheckCircle size={16} />} subtitle="Consolidado" color="#22c55e" />
           <MetricCard label="INDICADORES" value={chartColumns.length} icon={<Target size={16} />} subtitle="Total" color="#3b82f6" />
           <MetricCard label="ALERTAS" value={totalAlertas} icon={<AlertTriangle size={16} />} subtitle="Críticos" color="#ef4444" />
         </div>
@@ -447,12 +470,14 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
                     hole: 0.7,
                     marker: { colors: donutColors },
                     showlegend: false,
-                    textinfo: 'none'
+                    textinfo: 'percent',
+                    textposition: 'outside',
+                    textfont: { size: 10, color: 'var(--gray-700)' }
                   }
                 ]}
                 layout={{
                   autosize: true,
-                  margin: { t: 0, b: 0, l: 0, r: 0 },
+                  margin: { t: 25, b: 25, l: 25, r: 25 },
                   paper_bgcolor: 'rgba(0,0,0,0)',
                   annotations: [
                     {
