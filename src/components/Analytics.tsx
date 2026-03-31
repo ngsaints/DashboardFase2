@@ -88,7 +88,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ data, activeTab }) => {
   };
 
   // Prepare data for the chart by filtering out indicators with no values
-  const chartData = chartColumns.map((c, idx) => {
+  const chartData = chartColumns.map((c) => {
     const validRows = data.filter(row => row[c] !== 'N/A' && row[c] !== '-' && row[c] !== '');
     if (validRows.length === 0) return null;
     
